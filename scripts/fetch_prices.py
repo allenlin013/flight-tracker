@@ -11,10 +11,11 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
-from fast_flights import FlightQuery, Passengers, create_query, get_flights
+from fast_flights import FlightQuery, Passengers, create_query
 
 from price_logic import can_notify, evaluate_deal, mark_notified, utcnow
 from notify import send_discord_alert
+from _resilient_flights import resilient_get_flights
 
 ROOT = Path(__file__).resolve().parent.parent
 # watches.json 是這個工具的「資料庫」:GitHub Actions 排程讀它來查價,
@@ -158,7 +159,7 @@ def run_query(watch: dict, flights: list[FlightQuery], trip: str):
         passengers=Passengers(adults=watch.get("passengers", 1)),
         currency="TWD",
     )
-    return get_flights(query)
+    return resilient_get_flights(query)
 
 
 def pick_cheapest(result_list) -> Optional[object]:

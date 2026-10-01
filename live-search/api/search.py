@@ -8,7 +8,9 @@ import re
 from datetime import date
 
 from flask import Flask, jsonify, request
-from fast_flights import FlightQuery, Passengers, create_query, get_flights
+from fast_flights import FlightQuery, Passengers, create_query
+
+from _resilient_flights import resilient_get_flights
 
 app = Flask(__name__)
 
@@ -106,7 +108,7 @@ def handle_search():
     )
 
     try:
-        results = get_flights(query)
+        results = resilient_get_flights(query)
     except Exception as exc:  # noqa: BLE001
         return _json_response(
             {
