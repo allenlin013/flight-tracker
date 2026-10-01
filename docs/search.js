@@ -1,6 +1,6 @@
 // 部署到 Vercel 之後,把下面兩個值換成你自己的。
-const SEARCH_API_URL = "https://<換成你的-vercel-專案>.vercel.app/api/search";
-const SEARCH_API_KEY = "<換成你在-vercel-設定的-SEARCH_API_KEY>";
+const SEARCH_API_URL = "https://flight-tracker-three-eta.vercel.app/api/search";
+const SEARCH_API_KEY = "836e1b7db71c13cbe2416536d462cc75";
 
 const $ = (id) => document.getElementById(id);
 
