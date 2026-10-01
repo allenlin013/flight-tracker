@@ -2,17 +2,117 @@
 
 跟 scripts/fetch_prices.py 是兩套獨立的查詢邏輯 —— 這支是給「馬上查一次看現在
 價格」用的,部署在 Vercel(不是 GitHub Actions),所以沒有共用程式碼模組。
+
+Vercel 載入 api/ 底下的檔案時不會把同資料夾加進 sys.path,沒辦法 import 同層
+的其他檔案(實測過,會是 ModuleNotFoundError),所以耐操版的解析邏輯
+(resilient_get_flights,跳過缺價格的航班資料而不是整批報錯)直接寫在這支檔
+案裡,不另外拆檔案。scripts/fetch_prices.py 那邊是一般 Python 腳本執行,sibling
+import 正常運作,所以那邊維持獨立檔案 _resilient_flights.py。
 """
+import json
 import os
 import re
-from datetime import date
 
 from flask import Flask, jsonify, request
-from fast_flights import FlightQuery, Passengers, create_query
-
-from _resilient_flights import resilient_get_flights
+from fast_flights import FlightQuery, Passengers, create_query, fetch_flights_html
+from fast_flights.exceptions import FlightsNotFound
+from fast_flights.model import (
+    Airline,
+    Airport,
+    Alliance,
+    CarbonEmission,
+    Flights,
+    JsMetadata,
+    SimpleDatetime,
+    SingleFlight,
+)
+from fast_flights.parser import ResultList, _parse_time
+from selectolax.lexbor import LexborHTMLParser
 
 app = Flask(__name__)
+
+
+def resilient_get_flights(query) -> ResultList:
+    html = fetch_flights_html(query)
+    return _resilient_parse(html)
+
+
+def _resilient_parse(html: str) -> ResultList:
+    parser = LexborHTMLParser(html)
+    script = parser.css_first(r"script.ds\:1")
+    js = script.text()
+    data = js.split("data:", 1)[1].rsplit(",", 1)[0]
+
+    if data.endswith("errorHasStatus: true"):
+        raise FlightsNotFound("no flights found; received error")
+
+    payload = json.loads(data)
+
+    alliances, airlines_meta = [], []
+    try:
+        alliances_data, airlines_data = payload[7][1][0], payload[7][1][1]
+        for code, name in alliances_data:
+            alliances.append(Alliance(code=code, name=name))
+        for code, name in airlines_data:
+            airlines_meta.append(Airline(code=code, name=name))
+    except (IndexError, TypeError):
+        # 某些查詢(例如 3 段以上的多城市行程)metadata 區塊結構不一樣,
+        # 這份 metadata 我們實際上沒在用,拿不到就放空,不影響航班結果本身。
+        pass
+    meta = JsMetadata(alliances=alliances, airlines=airlines_meta)
+
+    flights = ResultList()
+    entries = payload[3][0] if isinstance(payload[3], list) else None
+    if not entries:
+        flights.metadata = meta
+        return flights
+
+    for k in entries:
+        try:
+            flight = k[0]
+            price = k[1][0][1]
+            typ = flight[0]
+            airlines = flight[1]
+
+            sg_flights = []
+            for single_flight in flight[2]:
+                from_airport = Airport(code=single_flight[3], name=single_flight[4])
+                to_airport = Airport(code=single_flight[6], name=single_flight[5])
+                departure = SimpleDatetime(
+                    date=tuple(single_flight[20]), time=_parse_time(single_flight[8])
+                )
+                arrival = SimpleDatetime(
+                    date=tuple(single_flight[21]), time=_parse_time(single_flight[10])
+                )
+                sg_flights.append(
+                    SingleFlight(
+                        from_airport=from_airport,
+                        to_airport=to_airport,
+                        departure=departure,
+                        arrival=arrival,
+                        duration=single_flight[11],
+                        plane_type=single_flight[17],
+                    )
+                )
+
+            extras = flight[22]
+            flights.append(
+                Flights(
+                    type=typ,
+                    price=price,
+                    airlines=airlines,
+                    flights=sg_flights,
+                    carbon=CarbonEmission(
+                        typical_on_route=extras[8], emission=extras[7]
+                    ),
+                )
+            )
+        except (IndexError, TypeError):
+            # 這筆資料缺價格或形狀不對(例如需要另外查價的航班),跳過繼續處理下一筆。
+            continue
+
+    flights.metadata = meta
+    return flights
 
 AIRPORT_RE = re.compile(r"^[A-Za-z]{3}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
