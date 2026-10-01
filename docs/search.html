@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>即時查詢</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>⚡ 即時查詢</h1>
+      <nav class="page-nav">
+        <a href="index.html">📊 歷史價格面板</a> ・ <a href="manage.html">⚙️ 管理監控清單</a>
+      </nav>
+    </header>
+
+    <p class="hint">直接查詢現在的即時價格(數秒內回應)。目前只支援單程/來回單一日期;多城市或整月比價請用「管理監控清單」排程追蹤。</p>
+
+    <div id="alert-box" class="alert-box" hidden></div>
+
+    <section class="card form-card">
+      <form id="search-form">
+        <div class="field-row">
+          <label>
+            行程類型
+            <select id="s-trip">
+              <option value="round_trip">來回</option>
+              <option value="one_way">單程</option>
+            </select>
+          </label>
+          <label>出發機場<input type="text" id="s-from" maxlength="3" placeholder="TPE" required /></label>
+          <label>抵達機場<input type="text" id="s-to" maxlength="3" placeholder="NRT" required /></label>
+        </div>
+        <div class="field-row">
+          <label>出發日期<input type="date" id="s-depart-date" required /></label>
+          <label id="s-return-wrap">回程日期<input type="date" id="s-return-date" /></label>
+          <label>乘客人數<input type="number" id="s-passengers" min="1" value="1" /></label>
+          <label>
+            艙等
+            <select id="s-seat">
+              <option value="economy">經濟艙</option>
+              <option value="premium-economy">豪華經濟艙</option>
+              <option value="business">商務艙</option>
+              <option value="first">頭等艙</option>
+            </select>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="search-btn" class="btn-primary">🔍 搜尋</button>
+        </div>
+      </form>
+    </section>
+
+    <div id="results" class="results-list"></div>
+  </div>
+  <script src="search.js"></script>
+</body>
+</html>

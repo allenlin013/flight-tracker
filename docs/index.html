@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>航班價格追蹤面板</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="vendor/chart.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>✈️ 航班價格追蹤面板</h1>
+      <div class="updated-at" id="updated-at">載入中...</div>
+      <nav class="page-nav"><a href="search.html">⚡ 即時查詢</a> ・ <a href="manage.html">⚙️ 管理監控清單</a></nav>
+    </header>
+
+    <div class="stat-row" id="stat-row" hidden>
+      <div class="stat-tile">
+        <div class="stat-value" id="stat-total">—</div>
+        <div class="stat-label">監控中</div>
+      </div>
+      <div class="stat-tile stat-tile--good">
+        <div class="stat-value" id="stat-deals">—</div>
+        <div class="stat-label">目前有優惠</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value" id="stat-points">—</div>
+        <div class="stat-label">累積價格快照</div>
+      </div>
+    </div>
+
+    <div class="toolbar" id="toolbar" hidden>
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="搜尋監控項目(id / 航線)..."
+      />
+      <select id="sort-select" class="sort-select">
+        <option value="deal">排序:優惠優先</option>
+        <option value="price-asc">排序:目前價格低到高</option>
+        <option value="price-desc">排序:目前價格高到低</option>
+        <option value="id">排序:依名稱</option>
+      </select>
+    </div>
+
+    <div id="cards" class="cards-grid"></div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

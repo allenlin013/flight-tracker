@@ -1,0 +1,5 @@
+{
+  "max_candidates_per_run": 8,
+  "notify_cooldown_hours": 24,
+  "watches": []
+}

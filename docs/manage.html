@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>管理監控清單</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="page-header">
+      <h1>⚙️ 管理監控清單</h1>
+      <nav class="page-nav"><a href="index.html">📊 歷史價格面板</a> ・ <a href="search.html">⚡ 即時查詢</a></nav>
+    </header>
+
+    <div id="alert-box" class="alert-box" hidden></div>
+
+    <section class="card form-card">
+      <h2 id="form-title">新增監控項目</h2>
+      <form id="watch-form">
+        <div class="field-row">
+          <label>
+            id
+            <input type="text" id="f-id" required placeholder="例如 tpe-nrt-nov" />
+          </label>
+          <label>
+            行程類型
+            <select id="f-trip">
+              <option value="round_trip">來回(round_trip)</option>
+              <option value="one_way">單程(one_way)</option>
+              <option value="multi_city">多城市(multi_city)</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="simple-fields">
+          <div class="field-row">
+            <label>出發機場<input type="text" id="f-from" maxlength="3" placeholder="TPE" /></label>
+            <label>抵達機場<input type="text" id="f-to" maxlength="3" placeholder="NRT" /></label>
+            <label>
+              日期模式
+              <select id="f-date-mode">
+                <option value="fixed">固定日期(fixed)</option>
+                <option value="range">日期區間(range)</option>
+                <option value="month">整個月(month)</option>
+              </select>
+            </label>
+          </div>
+
+          <div id="date-fixed" class="field-row">
+            <label>出發日期<input type="date" id="f-depart-date" /></label>
+            <label id="return-date-wrap">回程日期<input type="date" id="f-return-date" /></label>
+          </div>
+
+          <div id="date-range" class="field-row" hidden>
+            <label>區間開始<input type="date" id="f-range-start" /></label>
+            <label>區間結束<input type="date" id="f-range-end" /></label>
+          </div>
+
+          <div id="date-month" class="field-row" hidden>
+            <label>月份<input type="month" id="f-month" /></label>
+          </div>
+
+          <div id="stay-length-wrap" class="field-row" hidden>
+            <label class="full-width">
+              停留天數組合(逗號分隔,例如 5,7,10)
+              <input type="text" id="f-stay-lengths" placeholder="5,7,10" />
+            </label>
+          </div>
+        </div>
+
+        <div id="multi-city-fields" hidden>
+          <p class="hint">至少 2 段,每段都要填出發/抵達機場與日期。</p>
+          <div id="legs-list"></div>
+          <button type="button" id="add-leg-btn" class="btn-secondary">+ 新增一段</button>
+        </div>
+
+        <div class="field-row">
+          <label>乘客人數<input type="number" id="f-passengers" min="1" value="1" /></label>
+          <label>
+            艙等
+            <select id="f-seat">
+              <option value="economy">經濟艙</option>
+              <option value="premium-economy">豪華經濟艙</option>
+              <option value="business">商務艙</option>
+              <option value="first">頭等艙</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label>絕對價格門檻(TWD,可留空)<input type="number" id="f-abs-price" min="0" /></label>
+          <label>比歷史低點再低幾 %(可留空)<input type="number" id="f-rel-pct" min="0" max="100" /></label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="save-btn" class="btn-primary">儲存</button>
+          <button type="button" id="cancel-edit-btn" class="btn-secondary" hidden>取消編輯</button>
+        </div>
+      </form>
+    </section>
+
+    <section>
+      <h2>目前監控中</h2>
+      <div id="watch-list" class="watch-list"></div>
+    </section>
+  </div>
+  <script src="manage.js"></script>
+</body>
+</html>
