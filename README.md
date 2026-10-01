@@ -62,15 +62,22 @@ gh repo create <your-repo-name> --private --source=. --push
 
 ### 4. 綁定 Cloudflare Pages
 
-1. 到 [Cloudflare Pages](https://pages.cloudflare.com/) 建立新專案,連結這個 GitHub repo(私有 repo 也可以)。
-2. Build 設定:Framework preset 選 `None`,Build command 留空,**Build output directory 填 `docs`**。(`functions/` 資料夾 Cloudflare 會自動偵測,不用額外設定 build 指令。)
+1. 到 [dash.cloudflare.com](https://dash.cloudflare.com/) → 左側選單 **Workers & Pages** → **Create application** → 選 **Pages** 頁籤 → **Connect to Git**,連結這個 GitHub repo(私有 repo 也可以)。
+2. Build 設定:Build command 留空,**Build output directory 填 `docs`**(如果畫面上沒有這個欄位,改成在 Advanced settings / Root directory 裡把 **Path 填 `docs`**,作用是一樣的 —— 這個欄位代表「網站內容放在 repo 的哪個資料夾」,Cloudflare 近期的介面在沒有 build 指令時似乎只會顯示這個)。`functions/` 資料夾 Cloudflare 會自動偵測,不用額外設定 build 指令。
 3. 部署完成後會拿到一個 `*.pages.dev` 網址,就是你的面板。
 4. 到這個 Pages 專案的 Settings → Environment variables,新增以下變數(**Production** 環境;建議都用 Secret 加密):
    - `GITHUB_TOKEN`:第 3 步產生的 fine-grained PAT
    - `GITHUB_OWNER`:你的 GitHub 帳號名稱
    - `GITHUB_REPO`:repo 名稱
    - `GITHUB_BRANCH`:通常是 `main`
-5. **這一步是必要的,不是選配**:到 [Cloudflare Zero Trust](https://one.dash.cloudflare.com/) 設定 Access,把整個 Pages 網域(包含免費的 `*.pages.dev`,這個網域要另外在 Zero Trust 的設定裡「啟用」,跟綁自訂網域是分開的開關)設成需要登入才能看。因為現在網頁背後接了一支能改你 repo 內容的 API,沒設這一步等於任何人拿到網址都能亂改你的監控清單、甚至濫用那組 GitHub token 的寫入權限。
+5. **這一步是必要的,不是選配**:因為現在網頁背後接了一支能改你 repo 內容的 API,沒設這一步等於任何人拿到網址都能亂改你的監控清單、甚至濫用那組 GitHub token 的寫入權限。用 Cloudflare Access 把網站鎖起來只有自己能看(2026 年版介面,直接在專案頁面裡做,不用跳去 Zero Trust 後台手動設定):
+   1. 到這個 Pages/Workers 專案頁面上方的 **Access** 分頁。
+   2. 點藍色按鈕 **Protect this Worker behind Access**(第一次用 Access 會先要你設定 team name、選 Free 方案,流程上可能要求填信用卡資訊但不會扣款)。
+   3. 跳出的「Manage Worker access」視窗:**Scope** 選 **All traffic**(不要選 Previews only,那樣正式網址不會被保護到)。
+   4. **Authentication policy** 點 **+ Add policy**,選預設提供的 **Cloudflare account**(只有這個 Cloudflare 帳號的成員,也就是你自己,能進去;「Email domain」那個選項不要選,那是給公司網域用的)。
+   5. **Session duration** 可以拉長一點(例如 7 天)方便日常使用,不用每天重新登入。
+   6. 點 **Apply Access** 完成。
+   - 設定完之後,打開網址會先要你用 Cloudflare 帳號登入才能進去你的面板。
 
 ### 5. 部署「即時查詢」用的 Vercel 專案
 
